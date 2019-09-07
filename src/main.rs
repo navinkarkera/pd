@@ -1,6 +1,6 @@
-extern crate csv;
 #[macro_use]
 extern crate clap;
+extern crate dialoguer;
 
 mod tasks;
 
@@ -12,15 +12,6 @@ fn run() -> Result<(), Box<dyn Error>> {
         (version: "1.0")
         (author: "Navin Karkera <navin@disroot.org>")
         (about: "Dead simple password vault")
-        (@subcommand add =>
-            (about: "Add site")
-            (version: "1.0")
-            (author: "Navin Karkera <navin@disroot.org>")
-            (@arg site: +required "Website name")
-            (@arg user: +required "Username or email")
-            (@arg password: +required "Password")
-            (@arg p_type: +required "Login type")
-        )
         (@subcommand list =>
             (about: "List available sites")
             (version: "1.0")
@@ -32,23 +23,68 @@ fn run() -> Result<(), Box<dyn Error>> {
             (author: "Navin Karkera <navin@disroot.org>")
             (@arg site: +required "Webiste name to get details of")
         )
+        (@subcommand add =>
+            (about: "Add site details")
+            (version: "1.0")
+            (author: "Navin Karkera <navin@disroot.org>")
+        )
+        (@subcommand init =>
+            (about: "Initialize password store")
+            (version: "1.0")
+            (author: "Navin Karkera <navin@disroot.org>")
+        )
     )
     .get_matches();
     match matches.subcommand() {
         ("list", Some(_)) => {
-            println!("{}", tasks::list()?);
-        }
-        ("add", Some(add_matches)) => {
-            let result = tasks::add(tasks::Record {
-                site: add_matches.value_of("site").unwrap().to_string(),
-                identifier: add_matches.value_of("user").unwrap().to_string(),
-                password: add_matches.value_of("password").unwrap().to_string(),
-                identifier_type: add_matches.value_of("p_type").unwrap().to_string(),
-            })?;
-            println!("{}", result);
+            let master_password = dialoguer::PasswordInput::new()
+                .with_prompt("Enter Master Password")
+                .interact()?;
+            println!("{}", tasks::list(&master_password)?);
         }
         ("get", Some(get_matches)) => {
-            println!("{}", tasks::get(get_matches.value_of("site").unwrap())?);
+            let master_password = dialoguer::PasswordInput::new()
+                .with_prompt("Enter Master Password")
+                .interact()?;
+            println!(
+                "{}",
+                tasks::get(get_matches.value_of("site").unwrap(), &master_password)?
+            );
+        }
+        ("add", Some(_)) => {
+            let master_password = dialoguer::PasswordInput::new()
+                .with_prompt("Enter Master Password")
+                .interact()?;
+            let site = dialoguer::Input::<String>::new()
+                .with_prompt("Site")
+                .interact()?;
+            let identifier = dialoguer::Input::<String>::new()
+                .with_prompt("Identifier")
+                .interact()?;
+            let password = dialoguer::PasswordInput::new()
+                .with_prompt("Enter Site Password")
+                .with_confirmation("Confirm password", "Passwords do not match!")
+                .interact()?;
+            let identifier_type = dialoguer::Input::<String>::new()
+                .with_prompt("Identifier type")
+                .interact()?;
+            let result = tasks::add(
+                tasks::Record {
+                    site,
+                    identifier,
+                    password,
+                    identifier_type,
+                },
+                &master_password,
+            )?;
+            println!("{}", result);
+        }
+        ("init", Some(_)) => {
+            let master_password = dialoguer::PasswordInput::new()
+                .with_prompt("Enter Master Password")
+                .with_confirmation("Confirm Pasword", "Password do not match!")
+                .interact()?;
+            tasks::init_or_open_dir(&master_password)?;
         }
         _ => (),
     }

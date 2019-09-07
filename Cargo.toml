@@ -7,6 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-csv = "1.1"
 serde = { version = "1.0.99", features = ["derive"] }
 clap = "2.33"
+dialoguer = "0.4.0"
+zbox = { version = "0.8.5", features = ["libsodium-bundled", "storage-file"] }

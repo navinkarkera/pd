@@ -1,5 +1,7 @@
 commit_file := "commit"
 
+alias b:=build
+
 build:
     cargo build
 
