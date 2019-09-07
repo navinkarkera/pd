@@ -1,6 +1,6 @@
 use std::env;
-use std::fs::{create_dir_all, read_dir, File, OpenOptions};
-use std::io::{self, Write};
+use std::fs::{create_dir_all, read_dir, DirEntry, File, OpenOptions};
+use std::io::{self, Read, Write};
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
@@ -44,10 +44,43 @@ pub fn add(record: Record) -> Result<String, io::Error> {
 }
 
 pub fn list() -> Result<String, io::Error> {
-    let mut records = Vec::new();
+    let mut records = String::new();
     for entry in read_dir(store())? {
         let entry = entry?;
-        records.push(entry.path().display().to_string());
+        match entry.path().file_name() {
+            Some(file_name) => match file_name.to_str() {
+                Some(file_name) => records = format!("{}{}\n", records, file_name),
+                None => (),
+            },
+            None => (),
+        }
     }
-    Ok(records.join("\n"))
+    Ok(records)
+}
+
+fn is_matching_site(entry: &DirEntry, site: &str) -> bool {
+    entry
+        .file_name()
+        .to_str()
+        .map(|s| s.contains(site))
+        .unwrap_or(false)
+}
+
+pub fn get(site: &str) -> Result<String, io::Error> {
+    let mut files = Vec::new();
+    for entry in read_dir(store())? {
+        let entry = entry?;
+        if is_matching_site(&entry, site) {
+            files.push(entry);
+        }
+    }
+    let mut content = String::new();
+    for entry in files {
+        let mut file = File::open(entry.path())?;
+        let mut file_content = String::new();
+        file.read_to_string(&mut file_content)?;
+        content.push_str(&file_content);
+        content.push_str("\n============================================\n")
+    }
+    Ok(content)
 }

@@ -16,4 +16,4 @@ pull: commit
     git pull --rebase origin master
 
 push: pull
-    git push -F origin HEAD
+    git push -f origin HEAD
