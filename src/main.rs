@@ -8,7 +8,7 @@ use std::error::Error;
 use std::process;
 
 fn run() -> Result<(), Box<dyn Error>> {
-    let matches = clap_app!(myapp =>
+    let matches = clap_app!(PD =>
         (version: "1.0")
         (author: "Navin Karkera <navin@disroot.org>")
         (about: "Dead simple password vault")
@@ -21,7 +21,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             (about: "Get site password")
             (version: "1.0")
             (author: "Navin Karkera <navin@disroot.org>")
-            (@arg site: +required "Webiste name to get details of")
+            (@arg site: +required "Website name to get details of")
         )
         (@subcommand add =>
             (about: "Add site details")

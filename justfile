@@ -19,3 +19,6 @@ pull: commit
 
 push: pull
     git push -f origin HEAD
+
+install: release
+    cp target/release/pd ~/.local/bin/
