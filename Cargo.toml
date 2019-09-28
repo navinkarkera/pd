@@ -11,3 +11,5 @@ serde = { version = "1.0.99", features = ["derive"] }
 clap = "2.33"
 dialoguer = "0.4.0"
 zbox = { version = "0.8.5", features = ["libsodium-bundled", "storage-file"] }
+tar = "0.4"
+flate2 = "1.0"

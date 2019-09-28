@@ -33,6 +33,11 @@ fn run() -> Result<(), Box<dyn Error>> {
             (version: "1.0")
             (author: "Navin Karkera <navin@disroot.org>")
         )
+        (@subcommand backup =>
+            (about: "Backup password store, set PASSWORD_STORE_BACKUP to change backup directory")
+            (version: "1.0")
+            (author: "Navin Karkera <navin@disroot.org>")
+        )
     )
     .get_matches();
     match matches.subcommand() {
@@ -77,6 +82,7 @@ fn run() -> Result<(), Box<dyn Error>> {
                 },
                 &master_password,
             )?;
+            tasks::backup_store()?;
             println!("{}", result);
         }
         ("init", Some(_)) => {
@@ -85,6 +91,9 @@ fn run() -> Result<(), Box<dyn Error>> {
                 .with_confirmation("Confirm Pasword", "Password do not match!")
                 .interact()?;
             tasks::init_or_open_dir(&master_password)?;
+        }
+        ("backup", Some(_)) => {
+            tasks::backup_store()?;
         }
         _ => (),
     }

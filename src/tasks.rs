@@ -1,8 +1,14 @@
+extern crate flate2;
+extern crate tar;
 extern crate zbox;
+
 use std::env;
+use std::fs::File;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 
+use flate2::write::GzEncoder;
+use flate2::Compression;
 use serde::{Deserialize, Serialize};
 use zbox::{init_env, DirEntry, OpenOptions, RepoOpener};
 
@@ -27,6 +33,14 @@ fn store() -> PathBuf {
         Err(_) => PathBuf::from(&env::var("HOME").unwrap()).join(".pass_store"),
     };
     store_path
+}
+
+fn backup_dir() -> PathBuf {
+    let bk_dir = match env::var("PASSWORD_STORE_BACKUP") {
+        Ok(store_dir) => PathBuf::from(store_dir),
+        Err(_) => PathBuf::from(&env::var("HOME").unwrap()),
+    };
+    bk_dir
 }
 
 pub fn add(record: Record, password: &str) -> Result<String, zbox::Error> {
@@ -81,4 +95,15 @@ pub fn get(site: &str, password: &str) -> Result<String, zbox::Error> {
         content.push_str("\n============================================\n")
     }
     Ok(content)
+}
+
+pub fn backup_store() -> Result<(), std::io::Error> {
+    let store = store();
+    let backup_dir = backup_dir();
+    let archive_path = backup_dir.join("password_vault_backup.tar.gz");
+    let tar_gz = File::create(archive_path)?;
+    let enc = GzEncoder::new(tar_gz, Compression::default());
+    let mut tar = tar::Builder::new(enc);
+    tar.append_dir_all(".", store)?;
+    Ok(())
 }
